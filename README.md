@@ -39,7 +39,8 @@ src/
   label_shift_eval.py    P2 (unstratified folds), P5 (EM prior adjustment)
   paper_stats.py         P2 null, prior divergence, bootstrap CI, power, Wilcoxon tests
   mi_diagnostic.py       mutual-information check of baseline normalization
-  make_figures.py        Figures 1-3
+  make_eeg_figure.py     Figure 1: spectra, session effect, class effect, mutual information
+  make_figures.py        Figures 2-4: Pareto fronts, hypervolume, protocol decomposition
 results/                 CSV outputs of every step, as used in the paper
 ```
 
@@ -74,25 +75,27 @@ To keep the data elsewhere, set `export DROZY_DATA_DIR=/path/to/DROZY`.
 
 The `results/` folder already contains every CSV used in the paper. You can regenerate the figures and statistics without re-running the search, or re-run everything from scratch.
 
-**Figures and statistics only** (about 2 minutes). `make_figures.py` needs only `results/`; `paper_stats.py` and `mi_diagnostic.py` also need the data, because they rebuild the features:
+**Figures and statistics only** (about 2 minutes). `make_figures.py` needs only `results/`; `paper_stats.py`, `mi_diagnostic.py` and `make_eeg_figure.py` also need the data:
 
 ```bash
 python src/paper_stats.py      # decomposition table, TV, bootstrap CI, power, Wilcoxon
 python src/mi_diagnostic.py    # mutual-information diagnostic
-python src/make_figures.py     # writes figures/*.pdf
+python src/make_eeg_figure.py  # Figure 1 (reads the EDF files)
+python src/make_figures.py     # Figures 2-4, writes figures/*.pdf
 ```
 
 **Full pipeline** (run in this order):
 
 ```bash
 python src/run_search.py            # ~65 min on 2 CPU cores; writes {nsga2,random,tpe}_seed*.csv
-python src/aggregate_results.py     # Table 2, hypervolume (Fig. 2)
+python src/aggregate_results.py     # Table 2, hypervolume (Fig. 3)
 python src/run_transfer_eval.py     # P0, P3, P4, P6, noise stress test
 python src/diagnose_gap.py          # P1, P3', within-subject MCC
 python src/null_baseline.py         # noise-feature nulls (~3 min)
 python src/label_shift_eval.py      # P2, P5
 python src/paper_stats.py
 python src/mi_diagnostic.py
+python src/make_eeg_figure.py
 python src/make_figures.py
 ```
 

@@ -62,10 +62,12 @@ def style_axes(ax, y_zero_line=False):
 # encoded better by shape here, not a magnitude comparison).
 fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.2))
 
-MARKERS = {"knee_point": ("*", 170, "knee point"),
-           "max_mcc": ("o", 55, "max MCC"),
-           "max_phi": ("^", 60, "max $\\Phi$"),
-           "max_lapse_recall": ("s", 50, "max lapse recall")}
+# Hollow markers of decreasing size, so a model picked by several rules
+# shows as concentric outlines instead of one marker hiding another.
+MARKERS = {"knee_point": ("*", 230, "knee point"),
+           "max_mcc": ("o", 120, "max MCC"),
+           "max_phi": ("^", 70, "max $\\Phi$"),
+           "max_lapse_recall": ("s", 28, "max lapse recall")}
 
 all_front_pts = []
 all_nav_rows = []
@@ -82,12 +84,12 @@ nav_all = pd.DataFrame(all_nav_rows)
 
 for ax, ycol, ylabel in [(axes[0], "phi", "Explanation faithfulness ($\\Phi$)"),
                           (axes[1], "lapse_recall", "Lapse recall")]:
-    ax.scatter(front_all["mcc"], front_all[ycol], s=16, color=INK_MUTED,
-               alpha=0.55, linewidths=0, zorder=2, label="Pareto front points\n(5 seeds, pooled)")
+    ax.scatter(front_all["mcc"], front_all[ycol], s=12, color=INK_MUTED,
+               alpha=0.45, linewidths=0, zorder=2, label="Pareto-front points\n(5 seeds combined)")
     for rule, (marker, size, label) in MARKERS.items():
         sub = nav_all[nav_all["rule"] == rule]
         ax.scatter(sub["mcc"], sub[ycol], s=size, marker=marker,
-                   facecolor=BLUE, edgecolor="white", linewidths=0.6,
+                   facecolor="none", edgecolor=BLUE, linewidths=1.3,
                    zorder=3, label=label)
     ax.set_xlabel("MCC")
     ax.set_ylabel(ylabel)
@@ -110,7 +112,7 @@ seeds = summ["seed"].values
 hv_n = summ["hv_nsga2"].values
 hv_r = summ["hv_random"].values
 
-fig, ax = plt.subplots(figsize=(5.2, 3.0))
+fig, ax = plt.subplots(figsize=(5.4, 3.3))
 x = np.arange(len(seeds))
 w = 0.36
 b1 = ax.bar(x - w / 2, hv_n, width=w, color=BLUE, label="NSGA-II", zorder=2)
@@ -124,10 +126,12 @@ for bars in (b1, b2):
 ax.set_xticks(x)
 ax.set_xticklabels([f"seed {s}" for s in seeds])
 ax.set_ylabel("Dominated hypervolume (Monte Carlo)")
+ax.set_ylim(0, max(hv_n.max(), hv_r.max()) * 1.12)
 ax.set_title("NSGA-II dominates random search on 4 of 5 seeds",
-              fontsize=10, color=INK)
+              fontsize=10, color=INK, pad=22)
 style_axes(ax)
-ax.legend(frameon=False, loc="upper left", fontsize=8, labelcolor=INK_SECONDARY)
+ax.legend(frameon=False, loc="lower center", bbox_to_anchor=(0.5, 1.0),
+          ncol=2, fontsize=8, labelcolor=INK_SECONDARY, borderaxespad=0.2)
 fig.tight_layout()
 fig.savefig(f"{OUT}/fig_hypervolume.pdf", bbox_inches="tight", dpi=300)
 plt.close(fig)
@@ -158,15 +162,13 @@ for yi, (lab, s, col, null) in zip(y, rows):
     ax.barh(yi, m, xerr=sd, height=0.62, color=col, zorder=2, capsize=3,
             error_kw={"ecolor": INK_SECONDARY, "linewidth": 1.0})
     xe = max(m + sd, 0.0)
-    ax.annotate(f"{m:+.3f}", (xe, yi), xytext=(5, 0),
-                textcoords="offset points", ha="left",
-                va="center", fontsize=8.5, color=INK, fontweight="bold")
-    if null is not None:
-        ax.scatter([null], [yi], marker="D", s=22, color=INK, zorder=4)
+    txt = f"{m:+.3f}" + (f"   (null {null:+.3f})" if null is not None else "")
+    ax.annotate(txt, (xe, yi), xytext=(8, 0), textcoords="offset points",
+                ha="left", va="center", fontsize=8.5, color=INK)
 ax.set_yticks(y)
 ax.set_yticklabels([r[0] for r in rows], fontsize=7.8)
 ax.set_xlabel("MCC (mean $\\pm$ std over 20 navigation-rule configurations)")
-ax.set_xlim(-0.08, 0.26)
+ax.set_xlim(-0.08, 0.36)
 for spine in ("top", "right"):
     ax.spines[spine].set_visible(False)
 for spine in ("left", "bottom"):
@@ -175,13 +177,11 @@ ax.grid(axis="x", color=GRID, linewidth=0.8, zorder=0)
 ax.set_axisbelow(True)
 ax.tick_params(length=0)
 ax.axvline(0, color=INK_MUTED, linewidth=1.0, zorder=1)
-handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in (BLUE, ORANGE, YELLOW, AQUA)] + \
-          [Line2D([], [], marker="D", color=INK, linestyle="none", markersize=4.5)]
+handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in (BLUE, ORANGE, YELLOW, AQUA)]
 ax.legend(handles, ["label-stratified subject hold-out", "unstratified subject hold-out",
-                    "unsupervised adaptation", "state transfer (seen subjects)",
-                    "same protocol, noise features"],
-          frameon=False, fontsize=7, loc="upper center", ncol=3,
-          bbox_to_anchor=(0.35, -0.13), labelcolor=INK_SECONDARY)
+                    "unsupervised adaptation", "state transfer (seen subjects)"],
+          frameon=False, fontsize=7.5, loc="upper center", ncol=2,
+          bbox_to_anchor=(0.4, -0.13), labelcolor=INK_SECONDARY)
 ax.set_title("Apparent person-level skill depends on label-stratified fold assignment",
              fontsize=9.5, color=INK, loc="left")
 fig.tight_layout()
