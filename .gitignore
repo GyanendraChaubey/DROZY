@@ -216,3 +216,47 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---------------------------------------------------------------
+# Project-specific
+# ---------------------------------------------------------------
+# DROZY data: licensed, never commit
+data/
+*.edf
+*.tar.gz
+
+# Manuscripts and submission packages
+paper/
+srep/
+*.tex
+*.bib
+*.bbl
+*.blg
+*.aux
+*.out
+*.cls
+*.bst
+*.pdf
+
+# Generated outputs (reproducible from src/)
+figures/
+figs/
+results/*.log
+results/*.db
+results/studies.db*
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Superseded / exploratory scripts kept locally
+archive/
+
+# Everything else in the local working folder
+_to_delete/
+*.bundle
+*.zip
+src/strat_vs_unstrat_check.py
+src/subject_bootstrap_stats.py
+results/*_stdout.log
